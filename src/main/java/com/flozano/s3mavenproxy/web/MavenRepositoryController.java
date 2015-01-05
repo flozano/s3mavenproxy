@@ -1,6 +1,6 @@
 package com.flozano.s3mavenproxy.web;
 
-import java.io.InputStream;
+import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -60,13 +59,13 @@ public class MavenRepositoryController {
 		return deferred;
 	}
 
-	@RequestMapping(value = "/**", method = RequestMethod.PUT, produces = "text/plain")
+	@RequestMapping(value = "/**", method = RequestMethod.PUT, produces = "text/plain", consumes = "*/*")
 	public @ResponseBody DeferredResult<ResponseEntity<String>> put(
-			HttpServletRequest request, @RequestBody InputStream content) {
+			HttpServletRequest request) throws IOException {
 		DeferredResult<ResponseEntity<String>> deferred = new DeferredResult<>();
 		backend.put(getArtifact(request), request.getContentType(),
-				request.getContentLengthLong(), content).handle(
-				(res, error) -> {
+				request.getContentLengthLong(), request.getInputStream())
+				.handle((res, error) -> {
 					if (error != null) {
 						deferred.setErrorResult(error);
 					} else {

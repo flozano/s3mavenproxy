@@ -4,11 +4,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -32,6 +34,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.flozano.s3mavenproxy.domain.Artifact;
+import com.flozano.s3mavenproxy.domain.ForbiddenException;
 import com.flozano.s3mavenproxy.domain.MavenRepositoryBackend;
 import com.flozano.s3mavenproxy.domain.NotFoundException;
 import com.flozano.s3mavenproxy.domain.RetrievalResult;
@@ -59,6 +62,9 @@ public class WebTest {
 
 	CountDownLatch latch;
 
+	byte[] content = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+			0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D };
+
 	@Before
 	public void setup() {
 		Mockito.reset(mockedBackend);
@@ -75,7 +81,8 @@ public class WebTest {
 	@Test
 	public void testGet() throws Exception {
 
-		mockCompletable((cf) -> cf.complete(retrievalResult));
+		mockCompletable(mockedBackend.get(any(Artifact.class)),
+				(cf) -> cf.complete(retrievalResult));
 
 		MvcResult mvcResult = mockMvc.perform(get(path))
 				.andExpect(request().asyncStarted()).andReturn();
@@ -90,23 +97,35 @@ public class WebTest {
 	@Test
 	public void testGetNotFound() throws Exception {
 
-		mockCompletable((cf) -> cf
-				.completeExceptionally(new NotFoundException()));
+		mockCompletable(mockedBackend.get(any(Artifact.class)),
+				(cf) -> cf.completeExceptionally(new NotFoundException()));
 
 		MvcResult mvcResult = mockMvc.perform(get(path))
 				.andExpect(request().asyncStarted()).andReturn();
 		latch.await();
-		mockMvc.perform(asyncDispatch(mvcResult)).andExpect(
-				status().is4xxClientError());
+		mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().is(404));
 	}
 
-	private void mockCompletable(Consumer<CompletableFuture<RetrievalResult>> c) {
-		when(mockedBackend.get(any(Artifact.class))).then(invocation -> {
-			CompletableFuture<RetrievalResult> cf = new CompletableFuture<>();
+	@Test
+	public void testPutForbidden() throws Exception {
+		mockCompletable(mockedBackend.put(any(Artifact.class),
+				any(String.class), any(Long.class), any(InputStream.class)), //
+				(cf) -> cf.completeExceptionally(new ForbiddenException()));
+		MvcResult mvcResult = mockMvc.perform(put(path).content(content))
+				.andExpect(request().asyncStarted()).andReturn();
+		latch.await();
+		mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().is(403));
+	}
+
+	private <T> void mockCompletable(CompletableFuture<T> mockCall,
+			Consumer<CompletableFuture<T>> c) {
+		when(mockCall).then(invocation -> {
+			CompletableFuture<T> cf = new CompletableFuture<>();
 			executorService.schedule(() -> {
 				c.accept(cf);
 				latch.countDown();
-			}, 1, TimeUnit.SECONDS);
+				System.err.println("Completing");
+			}, 2, TimeUnit.SECONDS);
 			return cf;
 		});
 	}
