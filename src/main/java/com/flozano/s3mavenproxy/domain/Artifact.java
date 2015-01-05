@@ -1,5 +1,6 @@
 package com.flozano.s3mavenproxy.domain;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import com.google.common.base.Joiner;
@@ -10,7 +11,9 @@ import com.google.common.base.Joiner;
  * @author flozano
  *
  */
-public class Artifact {
+public class Artifact implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 	private final String groupId;
 	private final String artifactName;
 	private final String path;
