@@ -2,10 +2,14 @@ package com.flozano.s3mavenproxy.domain;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Date;
 
-public class RetrievalResult {
+public class RetrievalResult implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
 	private final URI targetURI;
 
 	private final Date expires;
