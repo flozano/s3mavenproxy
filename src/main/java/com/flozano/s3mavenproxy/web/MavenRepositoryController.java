@@ -1,6 +1,8 @@
 package com.flozano.s3mavenproxy.web;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -60,21 +62,33 @@ public class MavenRepositoryController {
 	}
 
 	@RequestMapping(value = "/**", method = RequestMethod.PUT, produces = "text/plain", consumes = "*/*")
+	@ResponseStatus(value = HttpStatus.CREATED)
 	public @ResponseBody DeferredResult<ResponseEntity<String>> put(
 			HttpServletRequest request) throws IOException {
+		Artifact artifact = getArtifact(request);
+
 		DeferredResult<ResponseEntity<String>> deferred = new DeferredResult<>();
-		backend.put(getArtifact(request), request.getContentType(),
+		backend.put(artifact, request.getContentType(),
 				request.getContentLengthLong(), request.getInputStream())
 				.handle((res, error) -> {
 					if (error != null) {
 						deferred.setErrorResult(error);
 					} else {
-						deferred.setResult(ResponseEntity
-								.ok("Artifact uploaded"));
+						try {
+							deferred.setResult(ResponseEntity.created(
+									getURIForArtifact(artifact)).body(
+									"Item uploaded"));
+						} catch (Exception e) {
+							deferred.setErrorResult(e);
+						}
 					}
 					return null;
 				});
 		return deferred;
+	}
+
+	private URI getURIForArtifact(Artifact artifact) throws URISyntaxException {
+		return new URI(artifact.getPath());
 	}
 
 	@ExceptionHandler(NotFoundException.class)

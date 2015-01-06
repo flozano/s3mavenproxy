@@ -117,6 +117,19 @@ public class WebTest {
 		mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().is(403));
 	}
 
+	@Test
+	public void testPut() throws Exception {
+		mockCompletable(mockedBackend.put(any(Artifact.class),
+				any(String.class), any(Long.class), any(InputStream.class)), //
+				(cf) -> cf.complete(null));
+
+		MvcResult mvcResult = mockMvc.perform(put(path).content(content))
+				.andExpect(request().asyncStarted()).andReturn();
+		latch.await();
+		mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().is(201))
+				.andExpect(header().string("location", path));
+	}
+
 	private <T> void mockCompletable(CompletableFuture<T> mockCall,
 			Consumer<CompletableFuture<T>> c) {
 		when(mockCall).then(invocation -> {
