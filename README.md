@@ -11,3 +11,7 @@ A very simple Maven repository based on Spring Boot, which:
 License is Apache 2.0 License
 
 Copyright 2015 Francisco A. Lozano López
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/flozano/s3mavenproxy/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
