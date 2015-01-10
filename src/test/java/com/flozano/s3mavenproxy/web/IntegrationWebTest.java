@@ -1,10 +1,10 @@
 package com.flozano.s3mavenproxy.web;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.InputStream;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ import com.flozano.s3mavenproxy.config.Config;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Config.class)
 @WebIntegrationTest(randomPort = true)
-@Ignore
+// @Ignore
 public class IntegrationWebTest {
 
 	@Value("${local.server.port}")
@@ -43,7 +43,14 @@ public class IntegrationWebTest {
 		ResponseEntity<Void> getResult = restOperations.getForEntity(url,
 				Void.class);
 		assertEquals(HttpStatus.FOUND, getResult.getStatusCode());
-		System.err.println(getResult.getHeaders());
+
+		ResponseEntity<Void> getResult2 = restOperations.getForEntity(url,
+				Void.class);
+		assertEquals(HttpStatus.FOUND, getResult2.getStatusCode());
+
+		assertNotNull(getResult.getHeaders().get("location"));
+		assertEquals(getResult.getHeaders().get("location"), getResult2
+				.getHeaders().get("location"));
 	}
 
 	private InputStream resource() {
