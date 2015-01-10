@@ -11,8 +11,17 @@ public class ArtifactTest {
 	@Test
 	public void testNonSnapshot() {
 		String path = "com/flozano/s3mavenproxy/s3mavenproxy-1.0.jar";
-		Artifact f = Artifact
-				.fromPath(path);
+		Artifact f = Artifact.fromPath(path);
+		assertEquals(path, f.getPath());
+		assertEquals("com.flozano.s3mavenproxy", f.getGroupId());
+		assertEquals("s3mavenproxy-1.0.jar", f.getArtifactName());
+		assertFalse(f.isSnapshot());
+	}
+
+	@Test
+	public void testNonSnapshotStartsWithSlash() {
+		String path = "com/flozano/s3mavenproxy/s3mavenproxy-1.0.jar";
+		Artifact f = Artifact.fromPath("/" + path);
 		assertEquals(path, f.getPath());
 		assertEquals("com.flozano.s3mavenproxy", f.getGroupId());
 		assertEquals("s3mavenproxy-1.0.jar", f.getArtifactName());
@@ -23,8 +32,7 @@ public class ArtifactTest {
 	public void testSnapshot() {
 		String path = "com/flozano/s3mavenproxy/s3mavenproxy-1.0-SNAPSHOT.jar";
 
-		Artifact f = Artifact
-				.fromPath(path);
+		Artifact f = Artifact.fromPath(path);
 		assertEquals(path, f.getPath());
 		assertEquals("com.flozano.s3mavenproxy", f.getGroupId());
 		assertEquals("s3mavenproxy-1.0-SNAPSHOT.jar", f.getArtifactName());

@@ -12,9 +12,7 @@ import org.springframework.security.config.annotation.web.servlet.configuration.
 @EnableWebMvcSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-	private enum AuthenticationBackend {
-		PLAIN, LDAP
-	}
+	private static final String USER_AUTHORITY = "USER";
 
 	@Value("${s3mavenproxy.auth:PLAIN}")
 	private AuthenticationBackend backend;
@@ -27,6 +25,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+		http.csrf().disable();
+		
 		http.authorizeRequests() //
 				.anyRequest() //
 				.authenticated() //
@@ -39,7 +39,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			throws Exception {
 		if (AuthenticationBackend.PLAIN.equals(backend)) {
 			auth.inMemoryAuthentication().withUser(plainUser)
-					.password(plainPassword);
+					.password(plainPassword).authorities(USER_AUTHORITY);
 		} else if (AuthenticationBackend.LDAP.equals(backend)) {
 			// TODO implement LDAP
 		} else {

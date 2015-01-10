@@ -43,7 +43,7 @@ public class MavenRepositoryBackendImpl implements MavenRepositoryBackend {
 		if (repositoryChecker.isInternal(artifact)) {
 			return s3Backend.put(artifact, contentType, length, content);
 		} else {
-			return s3Backend.put(artifact, contentType, length, content);
+			throw new ForbiddenException();
 		}
 	}
 

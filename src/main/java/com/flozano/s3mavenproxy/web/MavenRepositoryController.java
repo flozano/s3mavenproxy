@@ -10,12 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -24,7 +23,7 @@ import com.flozano.s3mavenproxy.domain.ForbiddenException;
 import com.flozano.s3mavenproxy.domain.MavenRepositoryBackend;
 import com.flozano.s3mavenproxy.domain.NotFoundException;
 
-@Controller
+@RestController
 public class MavenRepositoryController {
 
 	@Autowired
@@ -37,9 +36,8 @@ public class MavenRepositoryController {
 		return Artifact.fromPath(path);
 	}
 
-	@RequestMapping(value = "/**", method = RequestMethod.GET, produces = "text/plain")
-	public @ResponseBody DeferredResult<ResponseEntity<String>> get(
-			HttpServletRequest request) {
+	@RequestMapping(value = "/**", method = RequestMethod.GET)
+	public DeferredResult<ResponseEntity<String>> get(HttpServletRequest request) {
 
 		DeferredResult<ResponseEntity<String>> deferred = new DeferredResult<>();
 
@@ -61,10 +59,9 @@ public class MavenRepositoryController {
 		return deferred;
 	}
 
-	@RequestMapping(value = "/**", method = RequestMethod.PUT, produces = "text/plain", consumes = "*/*")
-	@ResponseStatus(value = HttpStatus.CREATED)
-	public @ResponseBody DeferredResult<ResponseEntity<String>> put(
-			HttpServletRequest request) throws IOException {
+	@RequestMapping(value = "/**", method = RequestMethod.PUT)
+	public DeferredResult<ResponseEntity<String>> put(HttpServletRequest request)
+			throws IOException {
 		Artifact artifact = getArtifact(request);
 
 		DeferredResult<ResponseEntity<String>> deferred = new DeferredResult<>();
@@ -93,12 +90,17 @@ public class MavenRepositoryController {
 
 	@ExceptionHandler(NotFoundException.class)
 	@ResponseStatus(value = HttpStatus.NOT_FOUND)
-	public @ResponseBody ResponseEntity<?> handleNotFound(NotFoundException e) {
+	public ResponseEntity<?> handleNotFound(NotFoundException e) {
 		return ResponseEntity.notFound().build();
 	}
 
 	@ExceptionHandler(ForbiddenException.class)
-	public @ResponseBody ResponseEntity<?> handleForbidden(ForbiddenException e) {
+	public ResponseEntity<?> handleForbidden(ForbiddenException e) {
 		return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+	}
+
+	@ExceptionHandler({ IllegalArgumentException.class })
+	public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException e) {
+		return ResponseEntity.badRequest().build();
 	}
 }

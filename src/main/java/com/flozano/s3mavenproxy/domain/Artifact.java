@@ -25,6 +25,9 @@ public class Artifact implements Serializable {
 	}
 
 	public static Artifact fromPath(String path) {
+		if (path.startsWith("/")) {
+			path = path.substring(1);
+		}
 		String[] partz = path.split("/");
 		if (partz.length < 2) {
 			throw new IllegalArgumentException("Invalid path " + path);

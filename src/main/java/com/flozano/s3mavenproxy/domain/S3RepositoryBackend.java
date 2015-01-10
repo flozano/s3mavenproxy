@@ -17,13 +17,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -32,6 +34,9 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 @Service("s3Backend")
 public class S3RepositoryBackend implements MavenRepositoryBackend {
+
+	private static final Logger LOGGER = LoggerFactory
+			.getLogger(S3RepositoryBackend.class);
 
 	private static final long CHUNKED = -1;
 	private static final long CACHE_EXPIRATION_DIFFERENCE = -2_000;
@@ -46,7 +51,7 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 
 	@Autowired
 	public S3RepositoryBackend(
-			@Value("${s3mavenproxy.bucket:com.flozano.maven}") String bucket,
+			@Value("${s3mavenproxy.aws.bucket:com.flozano.maven}") String bucket,
 			@Value("${s3mavenproxy.get-expiration:6}") long expiration,
 			@Value("${s3mavenproxy.get-expiration-time-unit:HOURS}") TimeUnit timeUnit,
 			@Value("${s3mavenproxy.cache-spec:maximumSize=10000}") String cacheSpec,
@@ -97,7 +102,7 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 			URL result = requireNonNull(s3.generatePresignedUrl(bucket,
 					artifact.getPath(), expirationDate, HttpMethod.GET));
 			return new RetrievalResult(result.toURI(), cacheExpirationDate);
-		} catch (AmazonClientException e) {
+		} catch (AmazonS3Exception e) {
 			if (isNotFoundKey(e)) {
 				throw new NotFoundException();
 			} else {
@@ -112,8 +117,8 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 		return new Date(expirationDate.getTime() + CACHE_EXPIRATION_DIFFERENCE);
 	}
 
-	private boolean isNotFoundKey(AmazonClientException e) {
-		return true;
+	private static boolean isNotFoundKey(AmazonS3Exception e) {
+		return e.getStatusCode() == 404;
 	}
 
 	private Date getNewExpirationDateForGet() {
@@ -168,6 +173,6 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 		md.setContentType(contentType);
 		md.setContentLength(length);
 
-		s3.putObject(bucket, artifact.getArtifactName(), inputStream, md);
+		s3.putObject(bucket, artifact.getPath(), inputStream, md);
 	}
 }
