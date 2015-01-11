@@ -35,7 +35,8 @@ public class RemoteRepositoryBackendTest {
 	@Test
 	public void testPut() throws InterruptedException, ExecutionException {
 		try {
-			backend.put(Artifact.fromPath(path), "text/plain", 100,
+			backend.put(Artifact.fromPath(path),
+					new ContentInformation("x/x", null, 1),
 					mock(InputStream.class)).get();
 			fail();
 		} catch (ExecutionException e) {

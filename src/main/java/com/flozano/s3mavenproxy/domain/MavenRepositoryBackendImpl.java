@@ -38,10 +38,10 @@ public class MavenRepositoryBackendImpl implements MavenRepositoryBackend {
 	}
 
 	@Override
-	public CompletableFuture<Void> put(Artifact artifact, String contentType,
-			long length, InputStream content) {
+	public CompletableFuture<Void> put(Artifact artifact, ContentInformation contentInformation,
+			InputStream content) {
 		if (repositoryChecker.isInternal(artifact)) {
-			return s3Backend.put(artifact, contentType, length, content);
+			return s3Backend.put(artifact, contentInformation, content);
 		} else {
 			throw new ForbiddenException();
 		}

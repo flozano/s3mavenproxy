@@ -1,5 +1,7 @@
 package com.flozano.s3mavenproxy.domain;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -28,9 +30,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 
 public class S3RepositoryBackendTest {
 
@@ -118,11 +120,24 @@ public class S3RepositoryBackendTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
+	public void testGetSomeOtherException() throws NotFoundException,
+			InterruptedException, ExecutionException {
+		when(s3.getObjectMetadata(eq(bucket), eq(artifact1.getPath())))
+				.thenThrow(anAmazonS3ExceptionWithStatus(401));
+		try {
+			backend.get(artifact1).get();
+			fail("Exception expected");
+		} catch (ExecutionException e) {
+			assertThat(e.getCause(),
+					is(not(IsInstanceOf.instanceOf(NotFoundException.class))));
+		}
+	}
+
+	@Test
 	public void testGetNotFound() throws NotFoundException,
 			InterruptedException, ExecutionException {
 		when(s3.getObjectMetadata(eq(bucket), eq(artifact1.getPath())))
-				.thenThrow(AmazonClientException.class);
+				.thenThrow(anAmazonS3ExceptionWithStatus(404));
 		try {
 			backend.get(artifact1).get();
 			fail("NotFound expected");
@@ -130,5 +145,11 @@ public class S3RepositoryBackendTest {
 			assertThat(e.getCause(),
 					IsInstanceOf.instanceOf(NotFoundException.class));
 		}
+	}
+
+	private static Throwable anAmazonS3ExceptionWithStatus(int i) {
+		AmazonS3Exception e = new AmazonS3Exception("not f0und");
+		e.setStatusCode(i);
+		return e;
 	}
 }

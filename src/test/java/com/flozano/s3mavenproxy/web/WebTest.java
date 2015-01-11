@@ -34,6 +34,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.flozano.s3mavenproxy.domain.Artifact;
+import com.flozano.s3mavenproxy.domain.ContentInformation;
 import com.flozano.s3mavenproxy.domain.ForbiddenException;
 import com.flozano.s3mavenproxy.domain.MavenRepositoryBackend;
 import com.flozano.s3mavenproxy.domain.NotFoundException;
@@ -89,7 +90,7 @@ public class WebTest {
 		latch.await();
 		mockMvc.perform(asyncDispatch(mvcResult))
 				.andExpect(status().is3xxRedirection())
-				.andExpect(content().contentType("text/plain"))
+				.andExpect(content().contentTypeCompatibleWith("text/plain"))
 				.andExpect(header().string("location", url))
 				.andExpect(content().string("Artifact found in " + url));
 	}
@@ -109,7 +110,7 @@ public class WebTest {
 	@Test
 	public void testPutForbidden() throws Exception {
 		mockCompletable(mockedBackend.put(any(Artifact.class),
-				any(String.class), any(Long.class), any(InputStream.class)), //
+				any(ContentInformation.class), any(InputStream.class)), //
 				(cf) -> cf.completeExceptionally(new ForbiddenException()));
 		MvcResult mvcResult = mockMvc.perform(put(path).content(content))
 				.andExpect(request().asyncStarted()).andReturn();
@@ -120,7 +121,7 @@ public class WebTest {
 	@Test
 	public void testPut() throws Exception {
 		mockCompletable(mockedBackend.put(any(Artifact.class),
-				any(String.class), any(Long.class), any(InputStream.class)), //
+				any(ContentInformation.class), any(InputStream.class)), //
 				(cf) -> cf.complete(null));
 
 		MvcResult mvcResult = mockMvc.perform(put(path).content(content))

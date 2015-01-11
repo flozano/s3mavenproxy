@@ -32,8 +32,8 @@ public class RemoteRepositoryBackend implements MavenRepositoryBackend {
 	}
 
 	@Override
-	public CompletableFuture<Void> put(Artifact artifact, String contentType,
-			long length, InputStream content) {
+	public CompletableFuture<Void> put(Artifact artifact, ContentInformation contentInformation,
+			InputStream content) {
 		CompletableFuture<Void> cf = new CompletableFuture<>();
 		cf.completeExceptionally(new ForbiddenException());
 		return cf;

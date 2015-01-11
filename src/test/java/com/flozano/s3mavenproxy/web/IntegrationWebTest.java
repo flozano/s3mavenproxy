@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.InputStream;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -18,12 +19,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.RestOperations;
 
+import com.flozano.s3mavenproxy.Integration;
 import com.flozano.s3mavenproxy.config.Config;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Config.class)
 @WebIntegrationTest(randomPort = true)
-// @Ignore
+@Category(Integration.class)
 public class IntegrationWebTest {
 
 	@Value("${local.server.port}")

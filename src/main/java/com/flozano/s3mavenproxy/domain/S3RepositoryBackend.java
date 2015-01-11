@@ -37,8 +37,6 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(S3RepositoryBackend.class);
-
-	private static final long CHUNKED = -1;
 	private static final long CACHE_EXPIRATION_DIFFERENCE = -2_000;
 	private final long expirationMilliseconds;
 	private final long cacheExpirationMilliseconds;
@@ -126,27 +124,23 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 	}
 
 	@Override
-	public CompletableFuture<Void> put(Artifact artifact, String contentType,
-			long length, InputStream content) {
+	public CompletableFuture<Void> put(Artifact artifact,
+			ContentInformation contentInformation, InputStream content) {
 		CompletableFuture<Void> cf = new CompletableFuture<>();
 
 		executorService.submit(() -> {
-			if (length == CHUNKED) {
-				try {
+			try {
+				if (contentInformation.isChunked()) {
 					File temp = File.createTempFile("s3mavenproxy", "tmp");
 					long newLength = copyContentToFile(content, temp);
-					uploadFileToS3(artifact, contentType, temp, newLength);
-
-				} catch (Exception e) {
-					cf.completeExceptionally(e);
-				}
-			} else {
-				try {
-					uploadToS3(artifact, contentType, content, length);
+					uploadFileToS3(artifact, contentInformation, temp,
+							newLength);
+				} else {
+					uploadToS3(artifact, contentInformation, content);
 					cf.complete(null);
-				} catch (Exception e) {
-					cf.completeExceptionally(e);
 				}
+			} catch (Exception e) {
+				cf.completeExceptionally(e);
 			}
 		});
 		return cf;
@@ -159,19 +153,20 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 		}
 	}
 
-	private void uploadFileToS3(Artifact artifact, String contentType,
-			File temp, long newLength) throws FileNotFoundException,
-			IOException {
+	private void uploadFileToS3(Artifact artifact,
+			ContentInformation contentInformation, File temp, long newLength)
+			throws FileNotFoundException, IOException {
 		try (FileInputStream fis = new FileInputStream(temp)) {
-			uploadToS3(artifact, contentType, fis, newLength);
+			uploadToS3(artifact, new ContentInformation(contentInformation,
+					newLength), fis);
 		}
 	}
 
-	private void uploadToS3(Artifact artifact, String contentType,
-			InputStream inputStream, long length) {
+	private void uploadToS3(Artifact artifact,
+			ContentInformation contentInformation, InputStream inputStream) {
 		ObjectMetadata md = new ObjectMetadata();
-		md.setContentType(contentType);
-		md.setContentLength(length);
+		md.setContentType(contentInformation.getContentType());
+		md.setContentLength(contentInformation.getLength());
 
 		s3.putObject(bucket, artifact.getPath(), inputStream, md);
 	}

@@ -1,6 +1,8 @@
 package com.flozano.s3mavenproxy.domain;
 
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import com.google.common.base.Joiner;
@@ -36,6 +38,17 @@ public class Artifact implements Serializable {
 				Arrays.copyOfRange(partz, 0, partz.length - 1));
 		String artifact = partz[partz.length - 1];
 		return new Artifact(path, groupId, artifact);
+	}
+
+	public URI getURI(URI base) {
+		// return base.resolve(this.path);
+		String baseString = base.toString();
+		try {
+			String separator = baseString.endsWith("/") ? "" : "/";
+			return new URI(baseString + separator + path);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	public boolean isSnapshot() {

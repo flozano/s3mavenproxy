@@ -7,6 +7,6 @@ public interface MavenRepositoryBackend {
 	CompletableFuture<RetrievalResult> get(Artifact artifact)
 			throws NotFoundException;
 
-	CompletableFuture<Void> put(Artifact artifact, String contentType,
-			long length, InputStream content);
+	CompletableFuture<Void> put(Artifact artifact,
+			ContentInformation contentInformation, InputStream content);
 }

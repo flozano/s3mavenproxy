@@ -2,7 +2,6 @@ package com.flozano.s3mavenproxy.web;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,12 +18,15 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.servlet.HandlerMapping;
 
 import com.flozano.s3mavenproxy.domain.Artifact;
+import com.flozano.s3mavenproxy.domain.ContentInformation;
 import com.flozano.s3mavenproxy.domain.ForbiddenException;
 import com.flozano.s3mavenproxy.domain.MavenRepositoryBackend;
 import com.flozano.s3mavenproxy.domain.NotFoundException;
 
 @RestController
 public class MavenRepositoryController {
+
+	private URI baseURI = URI.create("/");
 
 	@Autowired
 	@Qualifier("backend")
@@ -65,15 +67,15 @@ public class MavenRepositoryController {
 		Artifact artifact = getArtifact(request);
 
 		DeferredResult<ResponseEntity<String>> deferred = new DeferredResult<>();
-		backend.put(artifact, request.getContentType(),
-				request.getContentLengthLong(), request.getInputStream())
-				.handle((res, error) -> {
+		backend.put(artifact, ContentInformation.fromRequest(request),
+				request.getInputStream()).handle(
+				(res, error) -> {
 					if (error != null) {
 						deferred.setErrorResult(error);
 					} else {
 						try {
 							deferred.setResult(ResponseEntity.created(
-									getURIForArtifact(artifact)).body(
+									artifact.getURI(baseURI)).body(
 									"Item uploaded"));
 						} catch (Exception e) {
 							deferred.setErrorResult(e);
@@ -82,10 +84,6 @@ public class MavenRepositoryController {
 					return null;
 				});
 		return deferred;
-	}
-
-	private URI getURIForArtifact(Artifact artifact) throws URISyntaxException {
-		return new URI(artifact.getPath());
 	}
 
 	@ExceptionHandler(NotFoundException.class)
