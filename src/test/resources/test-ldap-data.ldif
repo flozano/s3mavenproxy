@@ -1,0 +1,25 @@
+dn: ou=groups,dc=flozano,dc=com
+objectclass: top
+objectclass: organizationalUnit
+ou: groups
+
+dn: ou=people,dc=flozano,dc=com
+objectclass: top
+objectclass: organizationalUnit
+ou: people
+
+dn: uid=test,ou=people,dc=flozano,dc=com
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+cn: Test User
+sn: Test
+uid: test
+userPassword: test
+
+dn: cn=users,ou=groups,dc=flozano,dc=com
+objectclass: top
+objectclass: groupOfNames
+cn: users
+uniqueMember: uid=test,ou=people,dc=flozano,dc=com
