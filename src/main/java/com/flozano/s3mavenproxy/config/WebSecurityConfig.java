@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configurers.ldap.LdapAuthenticationProviderConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
@@ -24,6 +25,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Value("${s3mavenproxy.auth.plain.password:test}")
 	private String plainPassword;
 
+	@Autowired
+	LdapSettings ldapSettings;
+
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable();
@@ -31,7 +35,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		http.headers().xssProtection().disable();
 
 		http.sessionManagement().sessionCreationPolicy(
-				SessionCreationPolicy.STATELESS);
+				SessionCreationPolicy.IF_REQUIRED);
 
 		http.authorizeRequests() //
 				.anyRequest() //
@@ -47,7 +51,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			auth.inMemoryAuthentication().withUser(plainUser)
 					.password(plainPassword).authorities(USER_AUTHORITY);
 		} else if (AuthenticationBackend.LDAP.equals(backend)) {
-			// TODO implement LDAP
+			LdapAuthenticationProviderConfigurer<AuthenticationManagerBuilder> ldapAuth = auth
+					.ldapAuthentication()
+					.userDnPatterns(ldapSettings.userDnPattern)
+					.groupSearchBase(ldapSettings.groupSearchBase);
+			if (ldapSettings.url == null || "".equals(ldapSettings.url)) {
+				ldapAuth.contextSource().ldif("classpath:test-ldap-data.ldif")
+						.root("dc=flozano,dc=com");
+			} else {
+				ldapAuth.contextSource(ldapSettings.ldapContextSource());
+			}
 		} else {
 			throw new IllegalStateException();
 		}

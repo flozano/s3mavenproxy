@@ -30,6 +30,9 @@ public class AmazonConfig {
 			// clean-up...
 			return new InstanceProfileCredentialsProvider(false);
 		} else {
+			if ("".equals(accessKey) || "".equals(secretKey)) {
+				throw new IllegalStateException("Unconfigured AWS credentials");
+			}
 			return new StaticCredentialsProvider(new BasicAWSCredentials(
 					accessKey, secretKey));
 		}
