@@ -14,7 +14,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 @Configuration
 public class AmazonConfig {
 
-	@Value("${aws.iam:false}")
+	@Value("${aws.iam:true}")
 	private boolean iamEnabled;
 
 	@Value("${aws.access-key:}")
