@@ -49,10 +49,10 @@ public class S3RepositoryBackend implements MavenRepositoryBackend {
 
 	@Autowired
 	public S3RepositoryBackend(
-			@Value("${s3mavenproxy.aws.bucket:com.flozano.maven}") String bucket,
-			@Value("${s3mavenproxy.get-expiration:6}") long expiration,
-			@Value("${s3mavenproxy.get-expiration-time-unit:HOURS}") TimeUnit timeUnit,
-			@Value("${s3mavenproxy.cache-spec:maximumSize=10000}") String cacheSpec,
+			@Value("${backend.s3.bucket:com.flozano.maven}") String bucket,
+			@Value("${backend.s3.get-expiration:6}") long expiration,
+			@Value("${backend.s3.get-expiration-time-unit:HOURS}") TimeUnit timeUnit,
+			@Value("${backend.s3.cache-spec:maximumSize=10000}") String cacheSpec,
 			AmazonS3 s3, ExecutorService executorService) {
 		this.bucket = requireNonNull(bucket);
 		this.s3 = requireNonNull(s3);

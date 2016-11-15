@@ -5,22 +5,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
-import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 
 @Configuration
 public class AmazonConfig {
 
-	@Value("${s3mavenproxy.aws.iam:false}")
+	@Value("${aws.iam:false}")
 	private boolean iamEnabled;
 
-	@Value("${s3mavenproxy.aws.access-key:}")
+	@Value("${aws.access-key:}")
 	private String accessKey;
 
-	@Value("${s3mavenproxy.aws.secret-key:}")
+	@Value("${aws.secret-key:}")
 	private String secretKey;
 
 	@Bean
@@ -33,8 +33,7 @@ public class AmazonConfig {
 			if ("".equals(accessKey) || "".equals(secretKey)) {
 				throw new IllegalStateException("Unconfigured AWS credentials");
 			}
-			return new StaticCredentialsProvider(new BasicAWSCredentials(
-					accessKey, secretKey));
+			return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
 		}
 	}
 

@@ -18,7 +18,7 @@ public class RemoteRepositoryBackend implements MavenRepositoryBackend {
 
 	@Autowired
 	public RemoteRepositoryBackend(
-			@Value("${s3mavenproxy.redirect-prefix:http://uk.maven.org/maven2/}") URI targetBaseURI) {
+			@Value("${backend.remote.redirect-prefix:http://uk.maven.org/maven2/}") URI targetBaseURI) {
 		this.targetBaseURI = requireNonNull(targetBaseURI);
 	}
 

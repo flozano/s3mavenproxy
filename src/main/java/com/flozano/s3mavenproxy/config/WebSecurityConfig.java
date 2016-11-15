@@ -6,23 +6,23 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.ldap.LdapAuthenticationProviderConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
-@EnableWebMvcSecurity
+@EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	private static final String USER_AUTHORITY = "USER";
 
-	@Value("${s3mavenproxy.auth:PLAIN}")
+	@Value("${auth:PLAIN}")
 	private AuthenticationBackend backend;
 
-	@Value("${s3mavenproxy.auth.plain.user:test}")
+	@Value("${auth.plain.user:test}")
 	private String plainUser;
 
-	@Value("${s3mavenproxy.auth.plain.password:test}")
+	@Value("${auth.plain.password:test}")
 	private String plainPassword;
 
 	@Autowired

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.ldap.core.support.LdapContextSource;
 
 @Configuration
-@ConfigurationProperties(prefix = "s3mavenproxy.auth.ldap")
+@ConfigurationProperties(prefix = "auth.ldap")
 public class LdapSettings {
 
 	String url;
@@ -16,13 +16,16 @@ public class LdapSettings {
 	String baseDn;
 	String userDnPattern = "uid={0},ou=people";
 	String groupSearchBase = "ou=groups";
+	boolean setBaseDN = false;
 
 	@Bean
 	@Lazy
 	public LdapContextSource ldapContextSource() {
 		LdapContextSource source = new LdapContextSource();
 		source.setUrl(url);
-		// source.setBase(baseDn);
+		if (setBaseDN) {
+			source.setBase(baseDn);
+		}
 		source.setUserDn(bindDn);
 		source.setPassword(bindPassword);
 		return source;
